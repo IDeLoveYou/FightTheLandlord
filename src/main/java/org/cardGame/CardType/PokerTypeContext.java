@@ -1,10 +1,9 @@
 package org.cardGame.CardType;
 
 import org.cardGame.CardList.CardList;
+import org.cardGame.CardListUtils.CardListUtils;
 import org.cardGame.CardTypeStrategy.*;
-import org.cardGame.PokerCard.CardFace;
 
-import java.util.Map;
 
 /**
  * @author IDeLoveYou
@@ -25,15 +24,10 @@ public class PokerTypeContext {
                 .setNextHandler(new ThreeWithCardHandler());
     }
 
-    //是否是正确的牌型组合
-    private boolean isCorrectCardList(CardList cardList) {
-        Map<CardFace, Long> cardFaceCountMap = cardList.getCardFaceCountMap();
-        //输入卡牌数量应该遵守规则，小于最大卡牌数
-        return cardFaceCountMap.keySet().stream().anyMatch(cardFace -> cardFaceCountMap.get(cardFace) <= cardFace.getMaxCount());
-    }
-
     public CardType parsePokerType(CardList cardList) {
-        return isCorrectCardList(cardList) ? chain.getCardType(cardList.sort()) : CardType.ERROR_CARD;
+        //解析牌型前先排序可以节省很多判断的步骤
+        cardList.sort();
+        return CardListUtils.isCorrectCardList(cardList) ? chain.getCardType(cardList) : CardType.ERROR_CARD;
     }
 
     public CardList getBetterCards(CardList cardList, CardType cardType) {

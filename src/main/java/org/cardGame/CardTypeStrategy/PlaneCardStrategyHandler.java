@@ -13,31 +13,26 @@ import static org.cardGame.PokerCard.CardFace.*;
 public class PlaneCardStrategyHandler extends CardTypeStrategyHandler {
     @Override
     public CardType getCardType(CardList cards) {
+        //获取飞机牌
+        CardList planeCard = cards.getPlaneCard();
+
         //基本验证
-        if (cards.size() < 6 || cards.containsFace(TWO) || cards.containsFace(JGHOST) || cards.containsFace(DGHOST)) {
+        if (cards.size() < 6 || cards.containsFace(TWO) || cards.containsFace(JGHOST) || cards.containsFace(DGHOST) || planeCard.isEmpty()) {
             return processNextHandler(cards);
         }
 
-        //筛选出卡牌数量为3为飞机头
-        CardList planeHeads = cards.subCardListByFaceCount(3);
-
-        //不符合飞机头连续的条件
-        if (!planeHeads.isDistinctContinuousCardFace()) {
-            return super.nextHandler.getCardType(planeHeads);
-        }
-
         //判断是否只是飞机
-        if (cards.size() == planeHeads.size() * 3) {
+        if (cards.size() == planeCard.size()) {
             return CardType.PLANE_CARD;
         }
 
         //飞机带单牌策略（尾巴需要带同等数量的单牌）&&（尾巴卡牌种类是否都为单）
-        if (cards.size() == planeHeads.size() + planeHeads.size() / 3 && cards.getCardFaceCountMap().values().stream().filter(entry -> entry != 3L).allMatch(entry -> entry == 1)) {
+        if (cards.size() == planeCard.size() + planeCard.size() / 3 && cards.getPlaneWithCard().isSingleOfCards()) {
             return CardType.PLANE_WITH_SINGLE_WING_CARD;
         }
 
         //飞机带双牌策略（尾巴需要带同等数量的双牌）&&（尾巴卡牌种类是否都为双）
-        if (cards.size() == planeHeads.size() + planeHeads.size() / 3 * 2 && cards.getCardFaceCountMap().values().stream().filter(entry -> entry != 3L).allMatch(entry -> entry == 2)) {
+        if (cards.size() == planeCard.size() + planeCard.size() / 3 * 2 && cards.getPlaneWithCard().isPairOfCards()) {
             return CardType.PLANE_WITH_PAIR_WINGS_CARD;
         }
 
@@ -46,18 +41,20 @@ public class PlaneCardStrategyHandler extends CardTypeStrategyHandler {
 
     @Override
     public CardList getBetterCardList(CardList cards, CardType cardType) {
-        CardList pokerCards = cards.subCardListByFaceCount(3);
+        CardList planeCard = cards.getPlaneCard();
 
         //已经是最大的炸，返回高一级别的牌型
-        if (pokerCards.containsFace(ACE)) {
+        if (planeCard.containsFace(ACE)) {
             return cardType.getBetterCardType().getMinCardList();
         }
 
         //改变带牌为最小
         return switch (cardType) {
-            case PLANE_CARD -> pokerCards.getBetterPriorityFace();
-            case PLANE_WITH_SINGLE_WING_CARD -> pokerCards.getBetterPriorityFace().addMinSingleCard(pokerCards.size() / 3);
-            case PLANE_WITH_PAIR_WINGS_CARD -> pokerCards.getBetterPriorityFace().addMinPairCard(pokerCards.size() / 3);
+            case PLANE_CARD -> planeCard.getAllBetterCard();
+            case PLANE_WITH_SINGLE_WING_CARD ->
+                    planeCard.getAllBetterCard().addSingleWithCardByCount(planeCard.size() / 3);
+            case PLANE_WITH_PAIR_WINGS_CARD ->
+                    planeCard.getAllBetterCard().addPairWithCardByCount(planeCard.size() / 3);
             default -> null;
         };
     }

@@ -13,23 +13,19 @@ import static org.cardGame.PokerCard.CardFace.*;
 public class StackCardStrategyHandler extends CardTypeStrategyHandler {
     @Override
     public CardType getCardType(CardList cards) {
-        //叠牌只能有一种卡面
-        if (cards.getCardFaceKindsCount() != 1) {
-            return processNextHandler(cards);
-        }
 
         //单张
-        if (cards.size() == 1) {
+        if (cards.size() == 1 && cards.isSingleOfCards()) {
             return SINGLE_CARD;
         }
 
         //对子
-        if (cards.size() == 2) {
+        if (cards.size() == 2 && cards.isPairOfCards()) {
             return CardType.PAIR_CARD;
         }
 
         //三条
-        if (cards.size() == 3) {
+        if (cards.size() == 3 && cards.isTripleOfCards()) {
             return CardType.TRIPLE_CARD;
         }
 
@@ -43,6 +39,6 @@ public class StackCardStrategyHandler extends CardTypeStrategyHandler {
             return cardType.getBetterCardType().getMinCardList();
         }
 
-        return cards.getBetterPriorityFace();
+        return cards.getAllBetterCard();
     }
 }

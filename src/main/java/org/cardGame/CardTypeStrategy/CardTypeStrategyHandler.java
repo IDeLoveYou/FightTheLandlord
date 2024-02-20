@@ -13,7 +13,7 @@ public abstract class CardTypeStrategyHandler {
     public abstract CardType getCardType(CardList cards);
 
     public CardType processNextHandler(CardList cards) {
-        return nextHandler != null ? nextHandler.getCardType(cards) : CardType.ERROR_CARD;
+        return nextHandler != null ? nextHandler.getCardType(cards) : CardType.NOT_CARD;
     }
 
     public abstract CardList getBetterCardList(CardList cards, CardType cardType);

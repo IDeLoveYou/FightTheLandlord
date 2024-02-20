@@ -7,10 +7,7 @@ import org.cardGame.CardType.PokerTypeContext;
 import static org.cardGame.PokerCard.CardFace.*;
 
 public class Main {
-    public static void main(String[] args) {
-        //请不要输入不存在的牌，例三张鬼牌、五张三等
-        CardList pokerCards = new CardList(THREE, THREE, THREE, TWO);
-
+    private static void test(CardList pokerCards) {
         System.out.println("输入：" + pokerCards);
 
         PokerTypeContext pokerTypeContext = new PokerTypeContext();
@@ -19,6 +16,23 @@ public class Main {
         System.out.println("牌型是：" + cardType);
 
         CardList betterCards = pokerTypeContext.getBetterCards(pokerCards, cardType);
-        System.out.println("更好的牌组合是：" + betterCards);
+        System.out.println("更好的牌组合是：" + betterCards + "\n");
+    }
+
+    public static void main(String[] args) {
+        CardList pokerCards1 = new CardList(THREE, THREE, THREE, THREE, THREE, FOUR, FOUR, FOUR, FIVE, SIX);
+        test(pokerCards1);
+
+        CardList pokerCards2 = new CardList(THREE, THREE, THREE, THREE, FOUR, FOUR, FOUR, FIVE, SIX);
+        test(pokerCards2);
+
+        CardList pokerCards3 = new CardList(THREE, THREE, THREE, THREE, SIX, SEVEN);
+        test(pokerCards3);
+
+        CardList pokerCards4 = new CardList(THREE, THREE, THREE, FOUR, FOUR, FOUR, FIVE, SIX);
+        test(pokerCards4);
+
+        CardList pokerCards5 = new CardList(THREE, THREE, FOUR, FOUR, FIVE, FIVE, SIX, SIX);
+        test(pokerCards5);
     }
 }

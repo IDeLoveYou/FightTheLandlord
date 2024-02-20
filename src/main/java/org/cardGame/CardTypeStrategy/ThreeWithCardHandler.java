@@ -13,7 +13,7 @@ public class ThreeWithCardHandler extends CardTypeStrategyHandler {
     @Override
     public CardType getCardType(CardList cards) {
         //三带二是两种牌型以及某种牌型需要三张
-        if (cards.getCardFaceKindsCount() != 2 || !cards.getCardFaceCountMap().containsValue(3L)) {
+        if (cards.getThreeCard().isEmpty()) {
             return processNextHandler(cards);
         }
 
@@ -32,17 +32,17 @@ public class ThreeWithCardHandler extends CardTypeStrategyHandler {
 
     @Override
     public CardList getBetterCardList(CardList cards, CardType cardType) {
-        CardList pokerCards = cards.subCardListByFaceCount(3);
+        CardList threeCard = cards.getThreeCard();
 
         //已经是最大的牌，返回高一级别的牌型
-        if (pokerCards.containsFace(TWO)) {
+        if (threeCard.containsFace(TWO)) {
             return cardType.getBetterCardType().getMinCardList();
         }
 
         //改变带牌为最小
         return switch (cardType) {
-            case THREE_WITH_SINGLE_CARD -> pokerCards.getBetterPriorityFace().addMinSingleCard(1);
-            case THREE_WITH_PAIR_CARD -> pokerCards.getBetterPriorityFace().addMinPairCard(1);
+            case THREE_WITH_SINGLE_CARD -> threeCard.getAllBetterCard().addSingleWithCardByCount(1);
+            case THREE_WITH_PAIR_CARD -> threeCard.getAllBetterCard().addPairWithCardByCount(1);
             default -> null;
         };
     }

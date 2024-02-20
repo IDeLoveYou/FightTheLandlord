@@ -1,12 +1,16 @@
 package org.cardGame.CardList;
 
 import lombok.Getter;
+import org.cardGame.CardListUtils.CardListUtils;
 import org.cardGame.PokerCard.CardFace;
 import org.cardGame.PokerCard.CardSuit;
 import org.cardGame.PokerCard.PokerCard;
+
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static org.cardGame.CardListUtils.CardListUtils.addMinStackCard;
+
 
 /**
  * @author IDeLoveYou
@@ -21,9 +25,8 @@ public class CardList extends ArrayList<PokerCard> {
     }
 
     //默认使用优先级排序
-    public CardList sort() {
+    public void sort() {
         super.sort(Comparator.comparingInt(PokerCard::getFacePriority));
-        return this;
     }
 
     //添加单张卡牌（不带花色）
@@ -36,95 +39,65 @@ public class CardList extends ArrayList<PokerCard> {
         this.add(new PokerCard(cardFace, cardSuit));
     }
 
-    //获取卡牌中各牌面的牌面
-    public List<CardFace> getCardFaceList() {
-        return this.stream()
-                .map(PokerCard::getFace)
-                .toList();
-    }
-
-    //获得卡牌中各牌型的数量map
-    public Map<CardFace, Long> getCardFaceCountMap() {
-        return getCardFaceList().stream()
-                .collect(Collectors.groupingBy(cardFace -> cardFace, Collectors.counting()));
-    }
-
-    //获得卡牌中各牌型的数量map
-    public Map<CardFace, Long> getAvailableCardFaceCountMap() {
-        // 直接在流操作中计算剩余数量并按优先级降序排序
-        return Arrays.stream(CardFace.values())
-                .collect(Collectors.toMap(
-                        cardFace -> cardFace,
-                        cardFace -> cardFace.getMaxCount() - getCardFaceCountMap().getOrDefault(cardFace, 0L),
-                        (oldValue, newValue) -> oldValue, // 处理键冲突（这里直接返回旧值，因为键应该是唯一的）
-                        LinkedHashMap::new));
-    }
-
     //是否包含某牌面
     public Boolean containsFace(CardFace cardFace) {
-        return getCardFaceList().contains(cardFace);
+        return CardListUtils.getCardFaceList(this).contains(cardFace);
     }
 
-    //获取卡牌中各牌面的数量
-    public Integer getCardFaceKindsCount() {
-        return getCardFaceCountMap().size();
+    //以下用于拆分出复杂牌型
+    public CardList getBombCard() {
+        return CardListUtils.subCardListByStackFaceCount(this, 4);
     }
 
-    //判断优先级是否连续
-    public Boolean isPriorityContinuous(List<CardFace> cardFaceList) {
-        return cardFaceList.stream()
-                .skip(1) // 跳过第一个元素，因为没有前一个元素与之比较
-                .allMatch(cardFace -> cardFace.getPriority() - cardFaceList.get(cardFaceList.indexOf(cardFace) - 1).getPriority() == 1);
+    public CardList getBombWithCard() {
+        CardList withCard = (CardList) this.clone();
+        withCard.removeAll(getBombCard());
+        return withCard;
     }
 
-    //判断是否是连续牌
-    public Boolean isContinuousCardFace() {
-        return isPriorityContinuous(getCardFaceList());
+    public CardList getPlaneCard() {
+        CardList cardList = CardListUtils.subCardListByStackFaceCount(this, 3);
+        return CardListUtils.isContinuousCardFace(cardList) ? cardList : new CardList();
     }
 
-    //去重后判断是否是连续牌
-    public Boolean isDistinctContinuousCardFace() {
-        return isPriorityContinuous(getCardFaceList().stream().distinct().toList());
+    public CardList getPlaneWithCard() {
+        CardList withCard = (CardList) this.clone();
+        withCard.removeAll(getPlaneCard());
+        return withCard;
     }
 
-    //通过相同卡牌的数量获取这些卡牌
-    public CardList subCardListByFaceCount(int count) {
-        return this.stream()
-                .collect(Collectors.groupingBy(PokerCard::getFace, Collectors.counting()))
-                .entrySet().stream()
-                .filter(entry -> entry.getValue() == count)
-                .flatMap(entry -> this.stream()
-                        .filter(card -> card.getFace() == entry.getKey())
-                        .limit(count))  // 限制只取count个相同的cardFace的Card对象
-                .collect(Collectors.toCollection(CardList::new));  // 将结果转换为CardList类型
+    public CardList getThreeCard() {
+        return CardListUtils.subCardListByStackFaceCount(this, 3);
     }
 
-    //将所有牌面设置为更大的牌面
-    public CardList getBetterPriorityFace() {
-        return this.stream()
-                .map(PokerCard::new)
-                .peek(PokerCard::setBetterFace)
-                .collect(Collectors.toCollection(CardList::new));
+    public Boolean isSingleOfCards() {
+        return CardListUtils.isAllFaceCountMatch(this, 1);
     }
 
-    //添加最小的单牌
-    public CardList addMinSingleCard(int count) {
-        getAvailableCardFaceCountMap().entrySet().stream()
-                .filter(entry -> entry.getValue() >= 1)
-                .limit(count)
-                .forEach(entry -> this.add(new PokerCard(entry.getKey())));
-        return this;
+    public Boolean isPairOfCards() {
+        return CardListUtils.isAllFaceCountMatch(this, 2);
     }
 
-    //添加最小的双牌
-    public CardList addMinPairCard(int count) {
-        getAvailableCardFaceCountMap().entrySet().stream()
-                .filter(entry -> entry.getValue() >= 2)
-                .limit(count)
-                .forEach(entry -> {
-                    this.add(new PokerCard(entry.getKey()));
-                    this.add(new PokerCard(entry.getKey()));
-                });
-        return this;
+    public Boolean isTripleOfCards() {
+        return CardListUtils.isAllFaceCountMatch(this, 3);
     }
+
+    //以下用于判断是否为连续牌
+    public Boolean isContinuousCardByStackCount(int stackCount) {
+        return CardListUtils.isAllFaceCountMatch(this, stackCount) && CardListUtils.isContinuousCardFace(this);
+    }
+
+    //以下函数用于自动出牌算法
+    public CardList getAllBetterCard() {
+        return CardListUtils.setBetterPriorityFace(this);
+    }
+
+    public CardList addSingleWithCardByCount(int count) {
+        return addMinStackCard(this, count, 1);
+    }
+
+    public CardList addPairWithCardByCount(int count) {
+        return addMinStackCard(this, count, 2);
+    }
+
 }

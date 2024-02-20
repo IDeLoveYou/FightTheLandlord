@@ -7,7 +7,8 @@ import static org.cardGame.PokerCard.CardFace.*;
 
 @Getter
 public enum CardType {
-    ERROR_CARD("错误牌型", -1, null),
+    NOT_CARD("错误牌型", -1, null),
+    ERROR_CARD("错误输入，请不要输入额外的牌", -2, null),
     SINGLE_CARD("单牌", 0, new CardList(THREE)),
     PAIR_CARD("对子", 0, new CardList(THREE, THREE)),
     TRIPLE_CARD("三张", 0, new CardList(THREE, THREE, THREE)),

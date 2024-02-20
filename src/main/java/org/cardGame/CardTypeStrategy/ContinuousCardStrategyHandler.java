@@ -17,13 +17,13 @@ public class ContinuousCardStrategyHandler extends CardTypeStrategyHandler {
             return processNextHandler(cards);
         }
 
-        //每种牌的数量都是1，且是连牌是顺子
-        if (cards.getCardFaceCountMap().values().stream().allMatch(i -> i == 1) && cards.isContinuousCardFace()) {
+        //顺子
+        if (cards.isContinuousCardByStackCount(1)) {
             return CardType.CONTINUOUS_SINGLE_CARD;
         }
 
-        //每种牌的数量都是2，且是连牌是连对
-        if (cards.getCardFaceCountMap().values().stream().allMatch(i -> i == 2) && cards.isDistinctContinuousCardFace()) {
+        //连对
+        if (cards.isContinuousCardByStackCount(2)) {
             return CardType.CONTINUOUS_PAIR_CARD;
         }
 
@@ -38,6 +38,6 @@ public class ContinuousCardStrategyHandler extends CardTypeStrategyHandler {
             return cardType.getBetterCardType().getMinCardList();
         }
 
-        return cards.getBetterPriorityFace();
+        return cards.getAllBetterCard();
     }
 }
